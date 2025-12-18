@@ -1,4 +1,4 @@
-using Best_Practices.Infraestructure.DependencyInjection;
+using Best_Practices.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;

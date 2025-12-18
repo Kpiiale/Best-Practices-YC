@@ -17,9 +17,9 @@
         <th>Marca</th>
         <th>Modelo</th>
         <th>Color</th>
-        <th>Gallons</th>
-        <th>Status</th>
-        <th>Actions</th>
+        <th>Gasolina</th>
+        <th>Estado</th>
+        <th>Acciones</th>
         </thead>
         @foreach (var vehicle in Model.Vehicles)
         {
@@ -45,22 +45,34 @@
         <td>
             @(vehicle.IsEngineOn() ? "Encendido": "Apagado")
         </td>
-        <td>
-            @if (vehicle.IsEngineOn())
-            {
-                <a href="/Home/StopEngine?id=@vehicle.ID">Stop Engine</a> }
-            else
-            {
-                <a href="/Home/StartEngine?id=@vehicle.ID">Start Engine</a>
-            }
+                <td>
+                    @if (vehicle.IsEngineOn())
+                    {
+                        <a class="btn btn-warning btn-sm"
+                           href="@Url.Action("StopEngine", "Home", new { id = vehicle.ID })">
+                            Stop Engine
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="btn btn-success btn-sm"
+                           href="@Url.Action("StartEngine", "Home", new { id = vehicle.ID })">
+                            Start Engine
+                        </a>
+                    }
 
-            <a href="/Home/AddGas?id=@vehicle.ID">LLenar tanque</a>
+                    <a class="btn btn-info btn-sm"
+                       href="@Url.Action("AddGas", "Home", new { id = vehicle.ID })">
+                        Llenar tanque
+                    </a>
+                </td>
 
-        </td>
     </tr>
         }
     </table>
 
-    <a href="/Home/AddMustang">Add Mustang</a>
-    <a href="/Home/AddExplorer">Add Explorer</a>
+    <a class="btn btn-primary" href="@Url.Action("AddVehicle", "Home", new { type = "Mustang" })">Agregar Mustang</a>
+    <a class="btn btn-secondary" href="@Url.Action("AddVehicle", "Home", new { type = "Explorer" })">Agregar Explorer</a>
+    <a class="btn btn-info" href="@Url.Action("AddVehicle", "Home", new { type = "Escape" })">Agregar Escape</a>
+
 </div>

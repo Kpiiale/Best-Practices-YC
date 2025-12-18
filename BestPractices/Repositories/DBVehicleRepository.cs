@@ -1,4 +1,5 @@
-﻿using Best_Practices.Models;
+﻿using Best_Practices.Infrastructure.Repositories;
+using Best_Practices.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;

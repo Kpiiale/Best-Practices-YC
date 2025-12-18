@@ -1,4 +1,4 @@
-﻿using Best_Practices.Infraestructure.Singletons;
+﻿using Best_Practices.Infrastructure.Singletons;
 using System;
 using System.Collections.Generic;
 using System.Linq;

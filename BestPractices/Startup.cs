@@ -1,4 +1,4 @@
-using Best_Practices.Infraestructure.DependencyInjection;
+﻿using Best_Practices.Infrastructure.DependencyInjection;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -21,16 +21,16 @@ namespace Best_Practices
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+        // Se ejecuta al iniciar la aplicación
         public void ConfigureServices(IServiceCollection services)
         {
-            var dependencyInjection = new ServicesConfiguration();
             services.AddControllersWithViews();
-            dependencyInjection.ConfigureServices(services);
 
+            // ✅ Llama a la extensión que registra todas las dependencias
+            services.AddProjectDependencies();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+        // Se ejecuta al construir el pipeline HTTP
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             if (env.IsDevelopment())
@@ -40,14 +40,12 @@ namespace Best_Practices
             else
             {
                 app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
             }
+
             app.UseHttpsRedirection();
             app.UseStaticFiles();
-
             app.UseRouting();
-
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
@@ -56,7 +54,6 @@ namespace Best_Practices
                     name: "default",
                     pattern: "{controller=Home}/{action=Index}/{id?}");
             });
-
         }
     }
 }

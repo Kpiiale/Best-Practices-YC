@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Best_Practices.Repositories
+namespace Best_Practices.Infrastructure.Repositories
 {
     public interface IVehicleRepository
     {

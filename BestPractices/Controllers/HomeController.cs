@@ -1,7 +1,7 @@
-﻿using Best_Practices.Infraestructure.Factories;
-using Best_Practices.Infraestructure.Singletons;
+﻿using Best_Practices.Infrastructure.Factories;
+using Best_Practices.Infrastructure.Repositories;
+using Best_Practices.Infrastructure.Singletons;
 using Best_Practices.Models;
-using Best_Practices.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
@@ -15,105 +15,95 @@ namespace Best_Practices.Controllers
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
-
         private readonly IVehicleRepository _vehicleRepository;
+        private readonly IVehicleFactory _vehicleFactory;
 
-        public HomeController(IVehicleRepository vehicleRepository, ILogger<HomeController> logger)
+        public HomeController(
+            IVehicleRepository vehicleRepository,
+            IVehicleFactory vehicleFactory,
+            ILogger<HomeController> logger)
         {
             _vehicleRepository = vehicleRepository;
+            _vehicleFactory = vehicleFactory;
             _logger = logger;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string? error = null)
         {
-            var model = new HomeViewModel();
-            model.Vehicles = VehicleCollection.Instance.Vehicles;
-            string error = Request.Query.ContainsKey("error") ? Request.Query["error"].ToString() : null;
-            ViewBag.ErrorMessage = error;
+            var model = new HomeViewModel
+            {
+                Vehicles = _vehicleRepository.GetVehicles()
+            };
 
+            ViewBag.ErrorMessage = error;
             return View(model);
         }
 
-        [HttpGet]
-        public IActionResult AddMustang()
-        {
-            var factory = new FordMustangCreator();
-            var vehicle = factory.Create();
-            _vehicleRepository.AddVehicle(vehicle);
-            return Redirect("/");
-        }
-
-        [HttpGet]
-        public IActionResult AddExplorer()
-        {
-            var factory = new FordExplorerCreator();
-            var vehicle = factory.Create();
-            _vehicleRepository.AddVehicle(vehicle);
-            return Redirect("/");
-        }
-
-        [HttpGet]
-        public IActionResult StartEngine(string id)
+        [HttpGet("/Home/AddVehicle/{type}")]
+        public IActionResult AddVehicle(string type)
         {
             try
             {
-                var vehicle = _vehicleRepository.Find(id);
-                vehicle.StartEngine();
-                return Redirect("/");
-            }
-            catch(Exception ex)
-            {
-                ViewBag.ErrorMessage = ex.Message;
-                return Redirect($"/?error={ex.Message}");
-            }
-          
-        }
+                IVehicleFactory factory = type.ToLower() switch
+                {
+                    "mustang" => new FordMustangCreator(),
+                    "explorer" => new FordExplorerCreator(),
+                    "escape" => new FordEscapeCreator(),
+                    _ => throw new ArgumentException("Modelo de vehículo desconocido.")
+                };
 
-        [HttpGet]
-        public IActionResult AddGas(string id)
-        {
+                var vehicle = factory.CreateVehicle();
+                _vehicleRepository.AddVehicle(vehicle);
 
-            try
-            {
-                var vehicle = _vehicleRepository.Find(id);
-                vehicle.AddGas();
-                return Redirect("/");
+                return RedirectToAction(nameof(Index));
             }
             catch (Exception ex)
             {
-                ViewBag.ErrorMessage = ex.Message;
-                return Redirect($"/?error={ex.Message}");
+                _logger.LogError(ex, "Error al agregar vehículo");
+                return RedirectToAction(nameof(Index), new { error = ex.Message });
             }
         }
 
-        [HttpGet]
-        public IActionResult StopEngine(string id)
+        [HttpGet("/Home/StartEngine/{id}")]
+        public IActionResult StartEngine(string id) => TryAction(() =>
+        {
+            var vehicle = _vehicleRepository.Find(id);
+            vehicle.StartEngine();
+        });
+
+        [HttpGet("/Home/StopEngine/{id}")]
+        public IActionResult StopEngine(string id) => TryAction(() =>
+        {
+            var vehicle = _vehicleRepository.Find(id);
+            vehicle.StopEngine();
+        });
+
+        [HttpGet("/Home/AddGas/{id}")]
+        public IActionResult AddGas(string id) => TryAction(() =>
+        {
+            var vehicle = _vehicleRepository.Find(id);
+            vehicle.AddGas();
+        });
+
+        private IActionResult TryAction(Action action)
         {
             try
             {
-                var vehicle = _vehicleRepository.Find(id);
-                vehicle.StopEngine();
-                return Redirect("/");
+                action();
+                return RedirectToAction(nameof(Index));
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                ViewBag.ErrorMessage = ex.Message;
-                return Redirect($"/?error={ex.Message}");
+                _logger.LogWarning(ex, "Error en acción de vehículo");
+                return RedirectToAction(nameof(Index), new { error = ex.Message });
             }
-           
-           
         }
 
-
-        public IActionResult Privacy()
-        {
-            return View();
-        }
+        public IActionResult Privacy() => View();
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+        public IActionResult Error() =>
+            View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
+
 }
